@@ -9,6 +9,7 @@ import { loadTemplate, parseTemplate, refreshCharacterList } from "./loader.js";
 import { populateUI, setWarning, syncEditToolbar } from "./ui.js";
 import { rebuild, applyAllTransforms } from "./render.js";
 import { exportTemplate } from "./export.js";
+import { initTransformGestures } from "./editor.js";
 
 document.addEventListener("DOMContentLoaded", init);
 
@@ -79,15 +80,22 @@ async function init() {
   window.addEventListener("focus", () => refreshCharacterList());
   els.characterSelect.addEventListener("pointerdown", () => refreshCharacterList());
 
-  // Barre d'outils du mode edition : selection de l'outil actif.
-  els.toolMoving.addEventListener("click", () => {
-    state.editTool = "move";
-    syncEditToolbar();
-  });
-  els.toolSetting.addEventListener("click", () => {
-    state.editTool = "setting";
-    syncEditToolbar();
-  });
+  // Barre d'outils du mode edition : selection de l'outil actif. rebuild()
+  // car les poignees affichees dependent de l'outil.
+  const toolButtons = [
+    [els.toolMoving, "move"],
+    [els.toolResize, "resize"],
+    [els.toolRotate, "rotate"],
+    [els.toolSetting, "setting"],
+  ];
+  for (const [btn, tool] of toolButtons) {
+    btn.addEventListener("click", () => {
+      state.editTool = tool;
+      syncEditToolbar();
+      rebuild();
+    });
+  }
+  initTransformGestures();
 
   window.addEventListener("keydown", (evt) => {
     if ((evt.ctrlKey || evt.metaKey) && evt.key.toLowerCase() === "z") {

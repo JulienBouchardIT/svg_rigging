@@ -152,6 +152,8 @@ export function populateUI() {
 export function syncEditToolbar() {
   els.editToolbar.hidden = state.editingPart === null;
   els.toolMoving.classList.toggle("active", state.editTool === "move");
+  els.toolResize.classList.toggle("active", state.editTool === "resize");
+  els.toolRotate.classList.toggle("active", state.editTool === "rotate");
   els.toolSetting.classList.toggle("active", state.editTool === "setting");
 }
 

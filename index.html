@@ -2,13 +2,13 @@
 <html lang="en">
 <head>
 <meta charset="utf-8" />
-<title data-i18n="app.title">2D Character Assembler</title>
+<title data-i18n="app.title">SVG RIGGING</title>
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="panel">
     <div id="panel-header">
-      <h1 data-i18n="app.title">2D Character Assembler</h1>
+      <h1 data-i18n="app.title">SVG RIGGING</h1>
       <button id="settings-btn" class="icon-btn" type="button" title="Settings" data-i18n-title="settings.title">⚙️</button>
     </div>
 
@@ -52,7 +52,9 @@
   <div id="canvas-wrap">
     <div id="edit-toolbar" hidden>
       <button type="button" id="tool-moving" class="edit-tool active" title="Moving" data-i18n-title="tool.moving">✥</button>
-      <button type="button" id="tool-setting" class="edit-tool" title="Setting" data-i18n-title="tool.setting">⚙️</button>
+      <button type="button" id="tool-resize" class="edit-tool" title="Resize" data-i18n-title="tool.resize">⤢</button>
+      <button type="button" id="tool-rotate" class="edit-tool" title="Rotate" data-i18n-title="tool.rotate">⟳</button>
+      <button type="button" id="tool-setting" class="edit-tool" title="Edit joint ids" data-i18n-title="tool.setting">⚙️</button>
     </div>
     <svg id="stage" viewBox="0 0 100 80" width="800" height="640" xmlns="http://www.w3.org/2000/svg">
       <g id="content"></g>

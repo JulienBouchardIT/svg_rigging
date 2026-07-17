@@ -1,4 +1,4 @@
-# SVG Rigging — 2D Character Assembler
+# SVG RIGGING
 
 Pose, edit and export 2D characters built from plain SVG parts, right in the browser.
 
