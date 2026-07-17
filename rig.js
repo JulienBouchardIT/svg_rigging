@@ -17,6 +17,7 @@ const state = {
   groupEls: new Map(),   // partName -> the <g> element rendered for it (for fast transform updates)
   contentEls: new Map(), // partName -> the <g> wrapping only its own drawable content (for the show/hide toggle)
   visibility: new Map(), // partName -> false quand la piece est masquee via le toggle
+  linked: new Set(),     // pieces left/right liees : editer l'une applique le meme delta a sa jumelle
   showLinks: false,
   hasFitViewport: false, // le cadrage auto ne doit avoir lieu qu'au tout premier chargement
   editingPart: null,     // nom de la piece actuellement en edition (points draggables), ou null
@@ -102,6 +103,7 @@ function snapshotState() {
     visibility: new Map(state.visibility),
     roots: new Map(state.roots),
     order: [...state.order],
+    linked: new Set(state.linked),
   };
 }
 
@@ -118,6 +120,7 @@ function undo() {
   state.visibility = snap.visibility;
   state.roots = snap.roots;
   state.order = snap.order;
+  state.linked = snap.linked;
 
   buildLinkMap();
   buildComponents();
@@ -134,6 +137,7 @@ async function load() {
   try {
     state.parts = await loadTemplate();
     state.order = [...state.parts.keys()];
+    state.linked.clear();
     undoStack.length = 0; // nouveau document : l'historique precedent n'a plus de sens
 
     buildLinkMap();
@@ -289,6 +293,20 @@ function findComponentIndex(partName) {
   return state.components.findIndex((c) => c.has(partName));
 }
 
+// Piece jumelle d'une piece gauche/droite : meme nom avec left <-> right
+// (ex: upper_leg_left <-> upper_leg_right). null si elle n'existe pas.
+function counterpartOf(name) {
+  let other = null;
+  if (name.includes("left")) other = name.replace("left", "right");
+  else if (name.includes("right")) other = name.replace("right", "left");
+  return other && state.parts.has(other) ? other : null;
+}
+
+// La jumelle a modifier en miroir, ou null si le lien n'est pas actif.
+function linkedCounterpart(name) {
+  return state.linked.has(name) ? counterpartOf(name) : null;
+}
+
 function populateUI() {
   // Root selector
   els.rootSelect.innerHTML = "";
@@ -374,6 +392,32 @@ function populateUI() {
     li.appendChild(dragHandle);
     li.appendChild(eyeBtn);
     li.appendChild(editBtn);
+
+    // Toggle lien pour les pieces left/right : quand il est actif, editer
+    // l'une des deux jumelles applique le meme deplacement a l'autre. Le
+    // lien est symetrique, donc active/desactive sur les deux a la fois.
+    const counterpart = counterpartOf(name);
+    if (counterpart) {
+      const linkBtn = document.createElement("button");
+      linkBtn.type = "button";
+      linkBtn.className = "icon-btn link-btn" + (state.linked.has(name) ? " active" : "");
+      linkBtn.textContent = "🔗";
+      linkBtn.title = `Lier a ${counterpart} : l'edition modifie les deux pieces`;
+      linkBtn.disabled = disabledByEdit;
+      linkBtn.addEventListener("click", () => {
+        pushUndo();
+        if (state.linked.has(name)) {
+          state.linked.delete(name);
+          state.linked.delete(counterpart);
+        } else {
+          state.linked.add(name);
+          state.linked.add(counterpart);
+        }
+        populateUI();
+      });
+      li.appendChild(linkBtn);
+    }
+
     li.appendChild(label);
     els.partList.appendChild(li);
   });
@@ -826,7 +870,7 @@ function startHandleDrag(evt, container, partName, kind, extra, handle) {
     handle.setAttribute("cy", local.y);
 
     if (kind === "joint") updateJointPosition(partName, extra, local.x, local.y);
-    else updatePathPoint(extra, kind, local.x, local.y);
+    else updatePathPoint(partName, extra, kind, local.x, local.y);
   };
   const onUp = () => {
     window.removeEventListener("pointermove", onMove);
@@ -839,20 +883,56 @@ function startHandleDrag(evt, container, partName, kind, extra, handle) {
   window.addEventListener("pointerup", onUp);
 }
 
-function updatePathPoint(extra, kind, x, y) {
+function updatePathPoint(partName, extra, kind, x, y) {
   const { srcPathEl, liveClone, segIndex, key } = extra;
   const segments = parsePathD(srcPathEl.getAttribute("d"));
   const seg = segments[segIndex];
+  const point = kind === "anchor" ? seg.p : seg[key];
+  const dx = x - point.x;
+  const dy = y - point.y;
   if (kind === "anchor") seg.p = { x, y };
   else seg[key] = { x, y };
   const newD = serializePathD(segments);
   srcPathEl.setAttribute("d", newD);
   if (liveClone) liveClone.setAttribute("d", newD);
+
+  propagatePathDelta(partName, extra, kind, dx, dy);
+}
+
+// Applique a la piece jumelle liee le meme deplacement (delta, pas valeur
+// absolue : chaque piece garde ses propres coordonnees locales). La
+// correspondance se fait par position (meme index de path, meme segment),
+// les jumelles etant supposees avoir la meme structure de dessin.
+function propagatePathDelta(partName, extra, kind, dx, dy) {
+  const otherName = linkedCounterpart(partName);
+  if (!otherName) return;
+  const paths = state.parts.get(partName).contentNodes.filter((el) => el.tagName === "path");
+  const otherPaths = state.parts.get(otherName).contentNodes.filter((el) => el.tagName === "path");
+  const pathIndex = paths.indexOf(extra.srcPathEl);
+  const otherPathEl = otherPaths[pathIndex];
+  if (!otherPathEl) return;
+
+  const segments = parsePathD(otherPathEl.getAttribute("d"));
+  const seg = segments[extra.segIndex];
+  const point = seg && (kind === "anchor" ? seg.p : seg[extra.key]);
+  if (!point) return;
+  point.x += dx;
+  point.y += dy;
+  const newD = serializePathD(segments);
+  otherPathEl.setAttribute("d", newD);
+
+  const otherContent = state.contentEls.get(otherName);
+  if (otherContent) {
+    const live = otherContent.querySelectorAll("path")[pathIndex];
+    if (live) live.setAttribute("d", newD);
+  }
 }
 
 function updateJointPosition(partName, extra, x, y) {
   const part = state.parts.get(partName);
   const link = part.links.find((l) => l.id === extra.jointId);
+  const dx = link ? x - link.cx : 0;
+  const dy = link ? y - link.cy : 0;
   if (link) {
     link.cx = x;
     link.cy = y;
@@ -869,9 +949,45 @@ function updateJointPosition(partName, extra, x, y) {
     extra.jointEl.setAttribute("cy", y);
   }
 
+  propagateJointDelta(partName, extra.jointId, dx, dy);
+
   buildLinkMap();
   buildComponents();
   updateAllTransformsInPlace();
+}
+
+// Meme delta sur le joint correspondant de la piece jumelle liee. Les ids
+// de joints different entre jumelles (knee_l / knee_r, ou hip partage) :
+// la correspondance se fait par position dans la liste des joints, les
+// jumelles etant supposees avoir la meme structure.
+function propagateJointDelta(partName, jointId, dx, dy) {
+  const otherName = linkedCounterpart(partName);
+  if (!otherName) return;
+  const part = state.parts.get(partName);
+  const other = state.parts.get(otherName);
+  const index = part.links.findIndex((l) => l.id === jointId);
+  const otherLink = other.links[index];
+  if (!otherLink) return;
+  otherLink.cx += dx;
+  otherLink.cy += dy;
+
+  const srcJoint = other.contentNodes.find(
+    (el) => el.classList && el.classList.contains("joint") && el.getAttribute("id") === otherLink.id
+  );
+  if (srcJoint) {
+    srcJoint.setAttribute("cx", otherLink.cx);
+    srcJoint.setAttribute("cy", otherLink.cy);
+  }
+  const otherContent = state.contentEls.get(otherName);
+  if (otherContent) {
+    const live = [...otherContent.querySelectorAll("circle.joint")].find(
+      (el) => el.getAttribute("id") === otherLink.id
+    );
+    if (live) {
+      live.setAttribute("cx", otherLink.cx);
+      live.setAttribute("cy", otherLink.cy);
+    }
+  }
 }
 
 function rotatePoint(angleDeg, p) {
