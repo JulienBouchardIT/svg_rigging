@@ -1,4 +1,4 @@
-// Charge characters/template.svg (une piece = un <g data-part="nom">),
+// Charge un fichier de characters/ (une piece = un <g data-part="nom">),
 // relie automatiquement les points d'attache (cercles class="joint")
 // qui portent le meme id entre deux pieces, et permet de poser/afficher
 // le personnage de facon interactive.
@@ -21,7 +21,8 @@ const state = {
   showLinks: false,
   hasFitViewport: false, // le cadrage auto ne doit avoir lieu qu'au tout premier chargement
   editingPart: null,     // nom de la piece actuellement en edition (points draggables), ou null
-  order: [],              // ordre des pieces choisi par l'utilisateur ; index 0 = devant (au-dessus)
+  order: [],             // ordre des pieces choisi par l'utilisateur ; index 0 = devant (au-dessus)
+  character: "template.svg", // fichier charge dans characters/, choisi via le selecteur
 };
 
 const undoStack = [];
@@ -38,6 +39,7 @@ async function init() {
   els.jointList = document.getElementById("joint-list");
   els.warnings = document.getElementById("warnings");
   els.rootSelect = document.getElementById("root-select");
+  els.characterSelect = document.getElementById("character-select");
   els.showLinksCheckbox = document.getElementById("show-links");
   els.resetBtn = document.getElementById("reset-angles");
   els.reloadBtn = document.getElementById("reload");
@@ -69,7 +71,30 @@ async function init() {
     rebuild();
   });
 
-  els.reloadBtn.addEventListener("click", load);
+  // Changer de personnage repart d'un etat neuf (pose, visibilite, racines)
+  // et recadre la vue sur le nouveau contenu.
+  els.characterSelect.addEventListener("change", () => {
+    state.character = els.characterSelect.value;
+    state.angles.clear();
+    state.visibility.clear();
+    state.roots.clear();
+    state.editingPart = null;
+    state.hasFitViewport = false;
+    load();
+  });
+
+  // Recharger rescanne aussi le dossier characters/ (utile apres un export
+  // qu'on vient d'y deposer).
+  els.reloadBtn.addEventListener("click", async () => {
+    await refreshCharacterList();
+    await load();
+  });
+
+  // La liste s'actualise aussi toute seule : au retour du focus sur la
+  // fenetre (on revient du gestionnaire de fichiers apres y avoir depose
+  // un export) et a l'ouverture du menu deroulant.
+  window.addEventListener("focus", () => refreshCharacterList());
+  els.characterSelect.addEventListener("pointerdown", () => refreshCharacterList());
 
   window.addEventListener("keydown", (evt) => {
     if ((evt.ctrlKey || evt.metaKey) && evt.key.toLowerCase() === "z") {
@@ -78,7 +103,52 @@ async function init() {
     }
   });
 
+  await refreshCharacterList();
   await load();
+}
+
+// Decouvre les fichiers .svg de characters/ via le listing d'annuaire du
+// serveur statique (python3 -m http.server le fournit). Sans listing, le
+// selecteur retombe sur le fichier courant seul.
+async function refreshCharacterList() {
+  let files = [];
+  try {
+    const res = await fetch("characters/");
+    if (res.ok) {
+      const doc = new DOMParser().parseFromString(await res.text(), "text/html");
+      files = [...doc.querySelectorAll("a[href]")]
+        .map((a) => decodeURIComponent(a.getAttribute("href").split("/").pop()))
+        .filter((f) => f.endsWith(".svg"))
+        .sort();
+    }
+  } catch (e) {
+    // pas de listing disponible : on garde juste le fichier courant
+  }
+  if (!files.includes(state.character)) {
+    // Fichier courant absent de la liste : avant le premier chargement on
+    // bascule sur le premier disponible (defaut inexistant) ; ensuite on
+    // garde son entree, car c'est lui qui est encore affiche a l'ecran.
+    if (!state.parts.size && files.length) state.character = files[0];
+    else files.unshift(state.character);
+  }
+
+  // Ne reconstruit les options que si la liste a change : le refresh est
+  // declenche souvent (focus, ouverture du menu) et toucher au DOM d'un
+  // <select> ouvert le fait cligner inutilement.
+  const current = [...els.characterSelect.options].map((o) => o.value);
+  if (files.length === current.length && files.every((f, i) => f === current[i])) {
+    els.characterSelect.value = state.character;
+    return;
+  }
+
+  els.characterSelect.innerHTML = "";
+  for (const f of files) {
+    const opt = document.createElement("option");
+    opt.value = f;
+    opt.textContent = f.replace(/\.svg$/, "");
+    els.characterSelect.appendChild(opt);
+  }
+  els.characterSelect.value = state.character;
 }
 
 // --- Annuler (Ctrl+Z) ------------------------------------------------------
@@ -135,7 +205,7 @@ function undo() {
 async function load() {
   setWarning("");
   try {
-    state.parts = await loadTemplate();
+    state.parts = await loadTemplate(state.character);
     state.order = [...state.parts.keys()];
     state.linked.clear();
     undoStack.length = 0; // nouveau document : l'historique precedent n'a plus de sens
@@ -169,9 +239,10 @@ function extractLinks(contentNodes) {
   return links;
 }
 
-async function loadTemplate() {
-  const res = await fetch("characters/template.svg");
-  if (!res.ok) throw new Error("characters/template.svg introuvable (" + res.status + ")");
+async function loadTemplate(file) {
+  const path = "characters/" + file;
+  const res = await fetch(path);
+  if (!res.ok) throw new Error(path + " introuvable (" + res.status + ")");
 
   const text = await res.text();
   const doc = new DOMParser().parseFromString(text, "image/svg+xml");
@@ -181,7 +252,7 @@ async function loadTemplate() {
     const contentNodes = Array.from(g.children);
     parts.set(name, { name, contentNodes, links: extractLinks(contentNodes) });
   });
-  if (!parts.size) throw new Error("aucune piece (<g data-part>) trouvee dans template.svg");
+  if (!parts.size) throw new Error("aucune piece (<g data-part>) trouvee dans " + file);
   return parts;
 }
 
@@ -1048,8 +1119,15 @@ function exportTemplate() {
     g.setAttribute("data-part", name);
     g.setAttribute("transform", `translate(${pos.x}, ${pos.y}) rotate(${pos.angle})`);
     for (const child of part.contentNodes) {
-      if (!state.showLinks && child.classList && child.classList.contains("joint")) continue;
-      g.appendChild(child.cloneNode(true));
+      const clone = child.cloneNode(true);
+      // Les joints sont indispensables pour recharger le fichier comme
+      // personnage (ce sont eux qui relient les pieces) : toujours
+      // exportes, mais invisibles si l'affichage des points est coche off.
+      if (clone.classList && clone.classList.contains("joint")) {
+        if (state.showLinks) clone.removeAttribute("opacity");
+        else clone.setAttribute("opacity", "0");
+      }
+      g.appendChild(clone);
     }
     measureG.appendChild(g);
   }
@@ -1073,12 +1151,27 @@ function exportTemplate() {
     `${bbox.x - pad} ${bbox.y - pad} ${bbox.width + pad * 2} ${bbox.height + pad * 2}`
   );
 
-  const xml = new XMLSerializer().serializeToString(outSvg);
+  const xml = '<?xml version="1.0" encoding="UTF-8"?>\n' + formatXml(outSvg) + "\n";
   const blob = new Blob([xml], { type: "image/svg+xml" });
   const url = URL.createObjectURL(blob);
   const a = document.createElement("a");
   a.href = url;
-  a.download = "template.svg";
+  a.download = state.character;
   a.click();
   URL.revokeObjectURL(url);
+}
+
+// Serialisation lisible (un element par ligne, indentation 2 espaces) :
+// XMLSerializer sort tout sur une seule ligne, penible a relire/editer.
+// Suffisant ici car le document exporte ne contient aucun noeud texte.
+function xmlEscape(value) {
+  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/"/g, "&quot;");
+}
+
+function formatXml(el, indent = "") {
+  const attrs = [...el.attributes].map((a) => ` ${a.name}="${xmlEscape(a.value)}"`).join("");
+  const children = [...el.children];
+  if (!children.length) return `${indent}<${el.tagName}${attrs} />`;
+  const inner = children.map((c) => formatXml(c, indent + "  ")).join("\n");
+  return `${indent}<${el.tagName}${attrs}>\n${inner}\n${indent}</${el.tagName}>`;
 }
