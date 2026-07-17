@@ -15,9 +15,12 @@ export function initDom() {
   els.rootSelect = document.getElementById("root-select");
   els.characterSelect = document.getElementById("character-select");
   els.settingsBtn = document.getElementById("settings-btn");
-  els.settingsPanel = document.getElementById("settings");
+  els.settingsDialog = document.getElementById("settings-dialog");
+  els.settingsClose = document.getElementById("settings-close");
   els.langSelect = document.getElementById("lang-select");
   els.themeSelect = document.getElementById("theme-select");
+  els.tabParts = document.getElementById("tab-parts");
+  els.tabJoints = document.getElementById("tab-joints");
   els.showLinksCheckbox = document.getElementById("show-links");
   els.resetBtn = document.getElementById("reset-angles");
   els.reloadBtn = document.getElementById("reload");

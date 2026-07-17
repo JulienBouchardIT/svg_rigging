@@ -12,23 +12,6 @@
       <button id="settings-btn" class="icon-btn" type="button" title="Paramètres" data-i18n-title="settings.title">⚙️</button>
     </div>
 
-    <div id="settings" hidden>
-      <div class="row">
-        <label for="lang-select" data-i18n="settings.language">Langue :</label>
-        <select id="lang-select">
-          <option value="fr">Français</option>
-          <option value="en">English</option>
-        </select>
-      </div>
-      <div class="row">
-        <label for="theme-select" data-i18n="settings.theme">Thème :</label>
-        <select id="theme-select">
-          <option value="light" data-i18n="settings.light">Clair</option>
-          <option value="dark" data-i18n="settings.dark">Sombre</option>
-        </select>
-      </div>
-    </div>
-
     <div id="warnings"></div>
 
     <div class="row">
@@ -50,11 +33,16 @@
       <select id="root-select"></select>
     </div>
 
-    <h2 data-i18n="h.parts">Pièces chargées</h2>
-    <ul id="part-list"></ul>
-
-    <h2 data-i18n="h.joints">Articulations</h2>
-    <div id="joint-list"></div>
+    <div class="tab-bar">
+      <button type="button" class="tab-btn active" data-tab="parts" data-i18n="tab.parts">Pièces</button>
+      <button type="button" class="tab-btn" data-tab="joints" data-i18n="tab.joints">Articulations</button>
+    </div>
+    <div id="tab-parts" class="tab-panel">
+      <ul id="part-list"></ul>
+    </div>
+    <div id="tab-joints" class="tab-panel" hidden>
+      <div id="joint-list"></div>
+    </div>
   </div>
 
   <div id="canvas-wrap">
@@ -62,6 +50,29 @@
       <g id="content"></g>
     </svg>
   </div>
+
+  <dialog id="settings-dialog">
+    <div id="settings-content">
+      <div id="settings-header">
+        <h2 data-i18n="settings.title">Paramètres</h2>
+        <button id="settings-close" class="icon-btn" type="button" title="Fermer" data-i18n-title="settings.close">✕</button>
+      </div>
+      <div class="row">
+        <label for="lang-select" data-i18n="settings.language">Langue :</label>
+        <select id="lang-select">
+          <option value="fr">Français</option>
+          <option value="en">English</option>
+        </select>
+      </div>
+      <div class="row">
+        <label for="theme-select" data-i18n="settings.theme">Thème :</label>
+        <select id="theme-select">
+          <option value="light" data-i18n="settings.light">Clair</option>
+          <option value="dark" data-i18n="settings.dark">Sombre</option>
+        </select>
+      </div>
+    </div>
+  </dialog>
 
   <script type="module" src="src/main.js"></script>
 </body>

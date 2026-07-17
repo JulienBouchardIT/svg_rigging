@@ -44,14 +44,53 @@ h1 {
   gap: 8px;
   margin-bottom: 12px;
 }
-#settings {
+#settings-dialog {
   border: 1px solid #8884;
-  border-radius: 6px;
-  padding: 10px;
+  border-radius: 8px;
+  padding: 0; /* le padding vit dans #settings-content pour que seul le backdrop soit clic-fermable */
+  min-width: 280px;
+}
+#settings-dialog::backdrop {
+  background: #0006;
+}
+#settings-content {
+  padding: 14px 16px;
+}
+#settings-content .row:last-child {
+  margin-bottom: 0;
+}
+#settings-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
   margin-bottom: 12px;
 }
-#settings .row:last-child {
-  margin-bottom: 0;
+#settings-header h2 {
+  margin: 0;
+}
+.tab-bar {
+  display: flex;
+  gap: 4px;
+  margin: 18px 0 10px;
+  border-bottom: 1px solid #8884;
+}
+.tab-btn {
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 13px;
+  opacity: 0.7;
+}
+.tab-btn:hover {
+  opacity: 1;
+}
+.tab-btn.active {
+  border-bottom-color: #4caf50;
+  opacity: 1;
+  font-weight: 600;
 }
 h2 {
   font-size: 13px;

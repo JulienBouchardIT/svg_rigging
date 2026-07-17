@@ -15,6 +15,7 @@ document.addEventListener("DOMContentLoaded", init);
 async function init() {
   initDom();
   initSettings();
+  initTabs();
 
   els.exportBtn.addEventListener("click", exportTemplate);
 
@@ -81,8 +82,13 @@ async function init() {
 // Reglages (langue, theme) : persistes en localStorage, hors de l'etat
 // undo (Ctrl+Z ne doit pas changer la langue ni le theme).
 function initSettings() {
-  els.settingsBtn.addEventListener("click", () => {
-    els.settingsPanel.hidden = !els.settingsPanel.hidden;
+  els.settingsBtn.addEventListener("click", () => els.settingsDialog.showModal());
+  els.settingsClose.addEventListener("click", () => els.settingsDialog.close());
+  // Clic sur le backdrop = fermer. Le contenu vit dans #settings-content
+  // (le dialog lui-meme n'a pas de padding), donc un clic dont la cible est
+  // le <dialog> ne peut venir que du backdrop.
+  els.settingsDialog.addEventListener("click", (evt) => {
+    if (evt.target === els.settingsDialog) els.settingsDialog.close();
   });
 
   els.langSelect.value = getLang();
@@ -104,6 +110,18 @@ function initSettings() {
   });
 
   applyStaticTranslations();
+}
+
+// Onglets Pieces / Articulations : un seul panneau visible a la fois.
+function initTabs() {
+  const btns = document.querySelectorAll(".tab-btn");
+  btns.forEach((btn) => {
+    btn.addEventListener("click", () => {
+      btns.forEach((b) => b.classList.toggle("active", b === btn));
+      els.tabParts.hidden = btn.dataset.tab !== "parts";
+      els.tabJoints.hidden = btn.dataset.tab !== "joints";
+    });
+  });
 }
 
 async function load() {
