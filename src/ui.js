@@ -85,6 +85,7 @@ export function populateUI() {
     editBtn.disabled = disabledByEdit;
     editBtn.addEventListener("click", () => {
       state.editingPart = isEditing ? null : name;
+      state.editTool = "move"; // chaque session d'edition demarre sur l'outil par defaut
       populateUI();
       rebuild();
     });
@@ -143,6 +144,15 @@ export function populateUI() {
     );
   }
   setWarning(messages.join("\n"));
+  syncEditToolbar();
+}
+
+// Barre d'outils flottante au-dessus du canvas : visible uniquement quand
+// une piece est en edition, avec l'outil actif surligne.
+export function syncEditToolbar() {
+  els.editToolbar.hidden = state.editingPart === null;
+  els.toolMoving.classList.toggle("active", state.editTool === "move");
+  els.toolSetting.classList.toggle("active", state.editTool === "setting");
 }
 
 export function setWarning(text) {

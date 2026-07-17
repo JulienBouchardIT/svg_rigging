@@ -34,6 +34,7 @@ body {
 }
 #canvas-wrap {
   flex: 1;
+  position: relative; /* ancre la barre d'outils d'edition flottante */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -212,6 +213,38 @@ button {
 }
 select {
   flex: 1;
+}
+#edit-toolbar {
+  position: absolute;
+  top: 12px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  border: 1px solid #8884;
+  border-radius: 8px;
+  background: Canvas; /* couleur systeme : suit le theme clair/sombre */
+  box-shadow: 0 2px 8px #0003;
+}
+#edit-toolbar[hidden] {
+  display: none; /* sans ca, display:flex ecrase l'attribut hidden */
+}
+.edit-tool {
+  font-size: 15px;
+  line-height: 1;
+  padding: 5px 8px;
+  border: 1px solid transparent;
+  border-radius: 5px;
+  background: none;
+  cursor: pointer;
+}
+.edit-tool:hover {
+  background: #8882;
+}
+.edit-tool.active {
+  background: #4caf5033;
+  border-color: #4caf50;
 }
 circle.link-point {
   pointer-events: none;

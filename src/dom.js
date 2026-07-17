@@ -23,6 +23,9 @@ export function initDom() {
   els.themeSelect = document.getElementById("theme-select");
   els.tabParts = document.getElementById("tab-parts");
   els.tabJoints = document.getElementById("tab-joints");
+  els.editToolbar = document.getElementById("edit-toolbar");
+  els.toolMoving = document.getElementById("tool-moving");
+  els.toolSetting = document.getElementById("tool-setting");
   els.showLinksCheckbox = document.getElementById("show-links");
   els.resetBtn = document.getElementById("reset-angles");
   els.reloadBtn = document.getElementById("reload");

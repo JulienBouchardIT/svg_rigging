@@ -6,7 +6,7 @@ import { state, pushUndo, popUndo, clearUndo } from "./state.js";
 import { t, getLang, setLang, applyStaticTranslations } from "./i18n.js";
 import { buildLinkMap, buildComponents, pickDefaultRoots, findComponentIndex } from "./model.js";
 import { loadTemplate, parseTemplate, refreshCharacterList } from "./loader.js";
-import { populateUI, setWarning } from "./ui.js";
+import { populateUI, setWarning, syncEditToolbar } from "./ui.js";
 import { rebuild, applyAllTransforms } from "./render.js";
 import { exportTemplate } from "./export.js";
 
@@ -78,6 +78,16 @@ async function init() {
   // un export) et a l'ouverture du menu deroulant.
   window.addEventListener("focus", () => refreshCharacterList());
   els.characterSelect.addEventListener("pointerdown", () => refreshCharacterList());
+
+  // Barre d'outils du mode edition : selection de l'outil actif.
+  els.toolMoving.addEventListener("click", () => {
+    state.editTool = "move";
+    syncEditToolbar();
+  });
+  els.toolSetting.addEventListener("click", () => {
+    state.editTool = "setting";
+    syncEditToolbar();
+  });
 
   window.addEventListener("keydown", (evt) => {
     if ((evt.ctrlKey || evt.metaKey) && evt.key.toLowerCase() === "z") {

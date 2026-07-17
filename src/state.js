@@ -22,6 +22,7 @@ export const state = {
   showLinks: false,
   hasFitViewport: false, // le cadrage auto ne doit avoir lieu qu'au tout premier chargement
   editingPart: null,     // nom de la piece actuellement en edition (points draggables), ou null
+  editTool: "move",      // outil actif en mode edition : "move" | "setting"
   order: [],             // ordre des pieces choisi par l'utilisateur ; index 0 = devant (au-dessus)
   character: "template.svg", // fichier charge dans characters/, choisi via le selecteur
 };

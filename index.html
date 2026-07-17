@@ -50,6 +50,10 @@
   <div id="panel-resizer" title="Drag to resize"></div>
 
   <div id="canvas-wrap">
+    <div id="edit-toolbar" hidden>
+      <button type="button" id="tool-moving" class="edit-tool active" title="Moving" data-i18n-title="tool.moving">✥</button>
+      <button type="button" id="tool-setting" class="edit-tool" title="Setting" data-i18n-title="tool.setting">⚙️</button>
+    </div>
     <svg id="stage" viewBox="0 0 100 80" width="800" height="640" xmlns="http://www.w3.org/2000/svg">
       <g id="content"></g>
     </svg>
