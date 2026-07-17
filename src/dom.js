@@ -25,4 +25,6 @@ export function initDom() {
   els.resetBtn = document.getElementById("reset-angles");
   els.reloadBtn = document.getElementById("reload");
   els.exportBtn = document.getElementById("export-svg");
+  els.uploadBtn = document.getElementById("upload-svg");
+  els.uploadInput = document.getElementById("upload-input");
 }

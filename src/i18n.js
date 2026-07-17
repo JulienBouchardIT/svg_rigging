@@ -17,6 +17,7 @@ const I18N = {
     "btn.reload": "Recharger",
     "btn.resetAngles": "Reset angles",
     "btn.export": "Exporter",
+    "btn.upload": "Importer",
     "label.showJoints": "afficher les points d'attache",
     "label.root": "Racine :",
     "tab.parts": "Pièces",
@@ -44,6 +45,7 @@ const I18N = {
     "btn.reload": "Reload",
     "btn.resetAngles": "Reset angles",
     "btn.export": "Export",
+    "btn.upload": "Import",
     "label.showJoints": "show attachment points",
     "label.root": "Root:",
     "tab.parts": "Parts",
@@ -61,7 +63,7 @@ const I18N = {
   },
 };
 
-let currentLang = localStorage.getItem("c2c-lang") || "fr";
+let currentLang = localStorage.getItem("c2c-lang") || "en";
 
 export function getLang() {
   return currentLang;
@@ -73,7 +75,7 @@ export function setLang(lang) {
 }
 
 export function t(key, vars = {}) {
-  let text = (I18N[currentLang] && I18N[currentLang][key]) || I18N.fr[key] || key;
+  let text = (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key;
   for (const [k, v] of Object.entries(vars)) text = text.replaceAll("{" + k + "}", v);
   return text;
 }

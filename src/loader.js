@@ -7,12 +7,10 @@ import { state } from "./state.js";
 import { t } from "./i18n.js";
 import { extractLinks } from "./model.js";
 
-export async function loadTemplate(file) {
-  const path = "characters/" + file;
-  const res = await fetch(path);
-  if (!res.ok) throw new Error(t("err.notFound", { path, status: res.status }));
-
-  const text = await res.text();
+// Parse le contenu d'un fichier personnage (SVG texte) en Map de pieces.
+// Utilise pour les fichiers de characters/ ET pour les fichiers importes
+// depuis le disque via le bouton Import.
+export function parseTemplate(text, file) {
   const doc = new DOMParser().parseFromString(text, "image/svg+xml");
   const parts = new Map();
   doc.querySelectorAll("[data-part]").forEach((g) => {
@@ -22,6 +20,13 @@ export async function loadTemplate(file) {
   });
   if (!parts.size) throw new Error(t("err.noParts", { file }));
   return parts;
+}
+
+export async function loadTemplate(file) {
+  const path = "characters/" + file;
+  const res = await fetch(path);
+  if (!res.ok) throw new Error(t("err.notFound", { path, status: res.status }));
+  return parseTemplate(await res.text(), file);
 }
 
 // Decouvre les fichiers .svg de characters/, dans l'ordre : listing

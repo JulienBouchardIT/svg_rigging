@@ -5,7 +5,7 @@ import { els, initDom } from "./dom.js";
 import { state, pushUndo, popUndo, clearUndo } from "./state.js";
 import { t, getLang, setLang, applyStaticTranslations } from "./i18n.js";
 import { buildLinkMap, buildComponents, pickDefaultRoots, findComponentIndex } from "./model.js";
-import { loadTemplate, refreshCharacterList } from "./loader.js";
+import { loadTemplate, parseTemplate, refreshCharacterList } from "./loader.js";
 import { populateUI, setWarning } from "./ui.js";
 import { rebuild, applyAllTransforms } from "./render.js";
 import { exportTemplate } from "./export.js";
@@ -18,6 +18,16 @@ async function init() {
   initTabs();
 
   els.exportBtn.addEventListener("click", exportTemplate);
+
+  // Import : charge un fichier SVG local comme personnage courant, sans
+  // passer par le serveur (le fichier n'existe que dans la session tant
+  // qu'il n'est pas depose dans characters/).
+  els.uploadBtn.addEventListener("click", () => els.uploadInput.click());
+  els.uploadInput.addEventListener("change", () => {
+    const file = els.uploadInput.files[0];
+    if (file) uploadCharacter(file);
+    els.uploadInput.value = ""; // permet de re-importer le meme fichier
+  });
 
   els.showLinksCheckbox.addEventListener("change", () => {
     state.showLinks = els.showLinksCheckbox.checked;
@@ -137,6 +147,33 @@ async function load() {
     pickDefaultRoots();
     populateUI();
     rebuild();
+  } catch (err) {
+    setWarning(t("err.load", { message: err.message }));
+    console.error(err);
+  }
+}
+
+async function uploadCharacter(file) {
+  setWarning("");
+  try {
+    const parts = parseTemplate(await file.text(), file.name);
+    state.character = file.name;
+    state.parts = parts;
+    state.order = [...parts.keys()];
+    state.linked.clear();
+    state.angles.clear();
+    state.visibility.clear();
+    state.roots.clear();
+    state.editingPart = null;
+    state.hasFitViewport = false;
+    clearUndo();
+
+    buildLinkMap();
+    buildComponents();
+    pickDefaultRoots();
+    populateUI();
+    rebuild();
+    await refreshCharacterList(); // ajoute l'entree du fichier importe au selecteur
   } catch (err) {
     setWarning(t("err.load", { message: err.message }));
     console.error(err);

@@ -1,41 +1,43 @@
 <!doctype html>
-<html lang="fr">
+<html lang="en">
 <head>
 <meta charset="utf-8" />
-<title>Assembleur de personnage 2D</title>
+<title data-i18n="app.title">2D Character Assembler</title>
 <link rel="stylesheet" href="style.css" />
 </head>
 <body>
   <div id="panel">
     <div id="panel-header">
-      <h1 data-i18n="app.title">Assembleur de personnage 2D</h1>
-      <button id="settings-btn" class="icon-btn" type="button" title="Paramètres" data-i18n-title="settings.title">⚙️</button>
+      <h1 data-i18n="app.title">2D Character Assembler</h1>
+      <button id="settings-btn" class="icon-btn" type="button" title="Settings" data-i18n-title="settings.title">⚙️</button>
     </div>
 
     <div id="warnings"></div>
 
     <div class="row">
-      <label for="character-select" data-i18n="label.character">Personnage :</label>
+      <label for="character-select" data-i18n="label.character">Character:</label>
       <select id="character-select"></select>
     </div>
     <div class="row">
-      <button id="reload" data-i18n="btn.reload">Recharger</button>
+      <button id="reload" data-i18n="btn.reload">Reload</button>
       <button id="reset-angles" data-i18n="btn.resetAngles">Reset angles</button>
     </div>
     <div class="row">
-      <button id="export-svg" data-i18n="btn.export">Exporter</button>
+      <button id="export-svg" data-i18n="btn.export">Export</button>
+      <button id="upload-svg" data-i18n="btn.upload">Import</button>
+      <input type="file" id="upload-input" accept=".svg,image/svg+xml" hidden />
     </div>
     <div class="row">
-      <label><input type="checkbox" id="show-links" /> <span data-i18n="label.showJoints">afficher les points d'attache</span></label>
+      <label><input type="checkbox" id="show-links" /> <span data-i18n="label.showJoints">show attachment points</span></label>
     </div>
     <div class="row">
-      <label for="root-select" data-i18n="label.root">Racine :</label>
+      <label for="root-select" data-i18n="label.root">Root:</label>
       <select id="root-select"></select>
     </div>
 
     <div class="tab-bar">
-      <button type="button" class="tab-btn active" data-tab="parts" data-i18n="tab.parts">Pièces</button>
-      <button type="button" class="tab-btn" data-tab="joints" data-i18n="tab.joints">Articulations</button>
+      <button type="button" class="tab-btn active" data-tab="parts" data-i18n="tab.parts">Parts</button>
+      <button type="button" class="tab-btn" data-tab="joints" data-i18n="tab.joints">Joints</button>
     </div>
     <div id="tab-parts" class="tab-panel">
       <ul id="part-list"></ul>
@@ -54,21 +56,21 @@
   <dialog id="settings-dialog">
     <div id="settings-content">
       <div id="settings-header">
-        <h2 data-i18n="settings.title">Paramètres</h2>
-        <button id="settings-close" class="icon-btn" type="button" title="Fermer" data-i18n-title="settings.close">✕</button>
+        <h2 data-i18n="settings.title">Settings</h2>
+        <button id="settings-close" class="icon-btn" type="button" title="Close" data-i18n-title="settings.close">✕</button>
       </div>
       <div class="row">
-        <label for="lang-select" data-i18n="settings.language">Langue :</label>
+        <label for="lang-select" data-i18n="settings.language">Language:</label>
         <select id="lang-select">
           <option value="fr">Français</option>
           <option value="en">English</option>
         </select>
       </div>
       <div class="row">
-        <label for="theme-select" data-i18n="settings.theme">Thème :</label>
+        <label for="theme-select" data-i18n="settings.theme">Theme:</label>
         <select id="theme-select">
-          <option value="light" data-i18n="settings.light">Clair</option>
-          <option value="dark" data-i18n="settings.dark">Sombre</option>
+          <option value="light" data-i18n="settings.light">Light</option>
+          <option value="dark" data-i18n="settings.dark">Dark</option>
         </select>
       </div>
     </div>
