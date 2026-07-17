@@ -7,6 +7,8 @@ export const SVG_NS = "http://www.w3.org/2000/svg";
 export const els = {};
 
 export function initDom() {
+  els.panel = document.getElementById("panel");
+  els.panelResizer = document.getElementById("panel-resizer");
   els.svg = document.getElementById("stage");
   els.content = document.getElementById("content");
   els.partList = document.getElementById("part-list");

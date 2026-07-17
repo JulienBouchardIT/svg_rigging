@@ -16,6 +16,7 @@ async function init() {
   initDom();
   initSettings();
   initTabs();
+  initPanelResize();
 
   els.exportBtn.addEventListener("click", exportTemplate);
 
@@ -131,6 +132,41 @@ function initTabs() {
       els.tabParts.hidden = btn.dataset.tab !== "parts";
       els.tabJoints.hidden = btn.dataset.tab !== "joints";
     });
+  });
+}
+
+// Largeur du panneau lateral ajustable a la souris (poignee entre le
+// panneau et le canvas), bornee et persistee. Double-clic = largeur par
+// defaut du CSS.
+const PANEL_WIDTH_KEY = "c2c-panel-width";
+
+function initPanelResize() {
+  const stored = parseInt(localStorage.getItem(PANEL_WIDTH_KEY), 10);
+  if (stored) els.panel.style.width = stored + "px";
+
+  els.panelResizer.addEventListener("pointerdown", (evt) => {
+    evt.preventDefault();
+    els.panelResizer.setPointerCapture(evt.pointerId);
+    els.panelResizer.classList.add("dragging");
+
+    const onMove = (moveEvt) => {
+      // Le panneau part du bord gauche : clientX est directement sa largeur.
+      const width = Math.min(Math.max(moveEvt.clientX, 220), window.innerWidth * 0.6);
+      els.panel.style.width = width + "px";
+    };
+    const onUp = () => {
+      els.panelResizer.removeEventListener("pointermove", onMove);
+      els.panelResizer.removeEventListener("pointerup", onUp);
+      els.panelResizer.classList.remove("dragging");
+      localStorage.setItem(PANEL_WIDTH_KEY, parseInt(els.panel.style.width, 10));
+    };
+    els.panelResizer.addEventListener("pointermove", onMove);
+    els.panelResizer.addEventListener("pointerup", onUp);
+  });
+
+  els.panelResizer.addEventListener("dblclick", () => {
+    els.panel.style.width = "";
+    localStorage.removeItem(PANEL_WIDTH_KEY);
   });
 }
 

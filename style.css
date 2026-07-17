@@ -14,11 +14,23 @@ body {
   height: 100vh;
 }
 #panel {
-  width: 320px;
+  width: 320px; /* largeur par defaut ; ajustable via #panel-resizer (persistee) */
+  min-width: 220px;
   padding: 16px;
   overflow-y: auto;
   border-right: 1px solid #8884;
   box-sizing: border-box;
+  flex-shrink: 0;
+}
+#panel-resizer {
+  flex: 0 0 6px;
+  margin-left: -6px; /* chevauche la bordure du panel sans decaler le canvas */
+  cursor: col-resize;
+  background: transparent;
+}
+#panel-resizer:hover,
+#panel-resizer.dragging {
+  background: #4caf5066;
 }
 #canvas-wrap {
   flex: 1;
